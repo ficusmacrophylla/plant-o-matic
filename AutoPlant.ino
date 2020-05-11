@@ -6,8 +6,9 @@ int sensorPin = A0;
 int ledPinGreen = 4;
 int ledPinYellow = 5;
 int ledPinRed = 6;
-//int sensorCtrlPort =2;
+int sensorCtrlPort =2;
 int outputValue ;
+int timeBtwReadings = 3600000; //1h milliseconds
 
 void setup() {
 
@@ -16,6 +17,7 @@ void setup() {
    pinMode(ledPinGreen, OUTPUT);
    pinMode(ledPinYellow, OUTPUT);
    pinMode(ledPinRed, OUTPUT);
+   pinMode(sensorCtrlPort, OUTPUT);
    Serial.println("Reading From the Sensor ...");
    delay(2000);
    
@@ -23,13 +25,12 @@ void setup() {
    }
 
 void loop() {
-   //digitalWrite(sensorCtrlPort, HIGH);
-   //delay(6000);
+   digitalWrite(sensorCtrlPort, HIGH);
+   delay(10000); //necessary to let sensor have enough time to initialize.
    outputValue= analogRead(sensorPin);
-   //delay(2000);
-   //digitalWrite(sensorCtrlPort, LOW);
+   digitalWrite(sensorCtrlPort, LOW);
    outputValue = map(outputValue,550,0,0,100);
-   Serial.print("Mositure : ");
+   Serial.print("Moisture : ");
    outputValue= outputValue +22; //strange offset?!
    Serial.print(outputValue);
    Serial.println("%");
@@ -46,6 +47,6 @@ void loop() {
     delay(300000); //5min
     digitalWrite(ledPinGreen, LOW);
    }
-   delay(3600000); //aspetta 1h
+   delay(timeBtwReadings); //aspetta 1h
 
    }
