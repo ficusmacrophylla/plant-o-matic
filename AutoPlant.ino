@@ -17,7 +17,7 @@ void setup() {
    pinMode(ledPinYellow, OUTPUT);
    pinMode(ledPinRed, OUTPUT);
    Serial.println("Reading From the Sensor ...");
-   delay(2000)
+   delay(2000);
    
 
    }

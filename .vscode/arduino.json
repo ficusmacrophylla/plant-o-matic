@@ -1,4 +1,5 @@
 {
     "programmer": "AVRISP mkII",
-    "board": "arduino:avr:uno"
+    "board": "arduino:avr:uno",
+    "sketch": "AutoPlant.ino"
 }
