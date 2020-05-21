@@ -12,7 +12,7 @@ int ledPinRed = 6;
 int moistureValue = 0;
 //control
 int sensorCtrlPort =2;
-int motorCtrlPort = 1;
+int motorCtrlPort = 7;
 //parameters
 int timeBtwReadings = 43200000; //12h LEGENDA: 1h = 3 600 000 milliseconds
 int blinkingTime = 300000; //5min
