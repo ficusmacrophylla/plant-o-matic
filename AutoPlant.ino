@@ -1,6 +1,7 @@
 //Plant-o-matic By TheTimeVoyager
 //GPL v3.0 licensed
-//version 0.1
+//version 0.2
+//checks terrain everi 12 hours and after delivers 10 seconds of water, startup wiring check
 
 //input
 int sensorPin = A0;
@@ -8,45 +9,48 @@ int sensorPin = A0;
 int ledPinGreen = 4;
 int ledPinYellow = 5;
 int ledPinRed = 6;
-int outputValue = 0;
+int moistureValue = 0;
 //control
 int sensorCtrlPort =2;
 int motorCtrlPort = 1;
-//service
-int blinkingTime = 300000; //5min
-int watered = 0;
+//parameters
 int timeBtwReadings = 43200000; //12h LEGENDA: 1h = 3 600 000 milliseconds
+int blinkingTime = 300000; //5min
+int wateringTime = 10000; //10seconds
+//service
+int watered = 0;
 int wiring = 0;
+
 
 int wiringCheck(){
    Serial.println("Checking Wiring");
-   digitalWrite(sensorCtrlPort, HIGH );
-   delay(2000);
+   //powering
+   digitalWrite(sensorCtrlPort, HIGH);
    digitalWrite(ledPinGreen, HIGH);
    digitalWrite(ledPinRed, HIGH);
    digitalWrite(ledPinYellow, HIGH);
    digitalWrite(motorCtrlPort, HIGH);
    delay(1000);
-   digitalWrite(sensorCtrlPort, HIGH);
-   delay(2000);
+   readingMoisture();
+   delay(1000);
+   digitalWrite(motorCtrlPort, LOW);
    digitalWrite(ledPinGreen, LOW);
    digitalWrite(ledPinRed,LOW);
    digitalWrite(ledPinYellow,LOW);
-   digitalWrite(motorCtrlPort,LOW);
-   delay(1000);
-   digitalWrite(sensorCtrlPort, LOW);
+   digitalWrite(sensorCtrlPort,LOW);
+   Serial.println("Checked");
    return 1;
 }
 
 void readingMoisture(){
    digitalWrite(sensorCtrlPort, HIGH);
    delay(10000); //necessary to let sensor have enough time to initialize.
-   outputValue= analogRead(sensorPin);
+   moistureValue= analogRead(sensorPin);
    digitalWrite(sensorCtrlPort, LOW);
-   outputValue = map(outputValue,550,0,0,100);
-   outputValue= outputValue +22; //strange offset?!
+   moistureValue = map(moistureValue,550,0,0,100);
+   moistureValue = moistureValue +22; //strange offset?!
    Serial.print("Moisture : ");
-   Serial.print(outputValue);
+   Serial.print(moistureValue);
    Serial.println("%");
 }
 
@@ -58,7 +62,7 @@ void signalStatus(int ledPin){
 
 void watering(){
    digitalWrite(motorCtrlPort, HIGH);
-   delay(5000);
+   delay(wateringTime);
    digitalWrite(motorCtrlPort, LOW);
    watered++;
 }
@@ -66,7 +70,7 @@ void watering(){
 void setup() {
    
    Serial.begin(9600);
-   outputValue=0;
+   moistureValue=0;
    pinMode(ledPinGreen, OUTPUT);
    pinMode(ledPinYellow, OUTPUT);
    pinMode(ledPinRed, OUTPUT);
@@ -82,16 +86,20 @@ void setup() {
    }
 
 void loop() {
+   if(wiring){
       readingMoisture();
-      if((outputValue < 30)){
+      if((moistureValue < 30)){
          signalStatus(ledPinRed);
          watering();
-      }else if((outputValue >= 30) && (outputValue<80)){
+      }else if((moistureValue >= 30) && (moistureValue<80)){
          signalStatus(ledPinYellow);
-      }else if(outputValue >= 80){
+      }else if(moistureValue >= 80){
          signalStatus(ledPinGreen);
       }
-      delay(timeBtwReadings); //aspetta 12h
+      delay(timeBtwReadings); //aspetta 
+   }else{
+      Serial.println("Wrong wiring or sensor disabled");
+   }
     
 
 }
