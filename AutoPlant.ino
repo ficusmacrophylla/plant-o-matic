@@ -3,13 +3,14 @@
 //version 0.2
 //checks terrain everi 12 hours and after delivers 10 seconds of water, startup wiring check
 
+
 //input
 int sensorPin = A0;
 //output
 int ledPinGreen = 4;
 int ledPinYellow = 5;
 int ledPinRed = 6;
-int moistureValue = 0;
+
 //control
 int sensorCtrlPort =2;
 int motorCtrlPort = 7;
@@ -17,6 +18,7 @@ int motorCtrlPort = 7;
 int timeBtwReadings = 43200000; //12h LEGENDA: 1h = 3 600 000 milliseconds
 int blinkingTime = 300000; //5min
 int wateringTime = 10000; //10seconds
+int moistureValue = 0; //value of water percentage into the ground
 //service
 int watered = 0;
 int wiring = 0;
