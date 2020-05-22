@@ -35,9 +35,9 @@ int wateringTime = 10000; //10seconds
 int moistureValue = 0; //value of water percentage into the ground
 //service
 int watered = 0;
-int wiring = 0;
+boolean wiring = false;
 //interface
-//int checkingHour = timeBtwReadings / 360000;
+int checkingHour = timeBtwReadings / 360000;
 int plantStatus = -1;
 
 void stdDisplPrint(String s, boolean res){
@@ -51,65 +51,65 @@ void stdDisplPrint(String s, boolean res){
 }
 
 void mainDispView(){
+   //128x32 size
    display.clearDisplay();
    display.setTextColor(WHITE);
    display.setTextSize(1);
+   //line1
    display.setCursor(0,1); //(x,y)
    display.println("Plant-O-Matic");
-   display.setCursor(90,1);
+   display.setCursor(93,1);
    display.println("V");
    display.setCursor(100,1);
    display.println(PROGVERSION);
-   display.setTextSize(0.5);
-   display.setCursor(0,20);
+   //line2
+   display.setCursor(0,15);
    display.println("Moisture:");
-   display.setCursor(24,20);
+   display.setCursor(60,15);
    display.println(moistureValue);
-   // display.setCursor(4,1);
-   // display.println("Frequency:");
-   // display.setCursor(4,15);
-   // display.println(checkingHour);
+   
    // display.setCursor(6,1);
    // display.println("WaterTime (sec):");
    // display.setCursor(6,20);
    // display.println(wateringTime/1000);
-   // display.setCursor(7,1);
-   // display.println("Plant Health:");
-   // display.setCursor(7,15);
-   // if(plantStatus == GOOD)
-   //    display.println(":)");
-   // if(plantStatus == NORMAL)
-   //    display.println(":|");
-   // if(plantStatus == BAD)
-   //    display.println(":(");
-   // else display.println("ND");
+   //line3
+   display.setCursor(0,25);
+   display.println("Status ");
+   display.setCursor(40,25);
+   if(plantStatus == GOOD)
+      display.println(":)");
+   else if(plantStatus == NORMAL)
+      display.println(":|");
+   else if(plantStatus == BAD)
+      display.println(":(");
+   else display.println("ND");
+
+   display.setCursor(80,25);
+   display.println("Freq:");
+   display.setCursor(110,25);
+   display.println(checkingHour);
    
    Serial.println("displaying");
    display.display();
 }
 
-int wiringCheck(){
+boolean wiringCheck(){
    Serial.println("Checking Wiring");
    stdDisplPrint("Checking Wiring", true);
    //powering
    digitalWrite(sensorCtrlPort, HIGH);
-   digitalWrite(ledPinGreen, HIGH);
-   digitalWrite(ledPinRed, HIGH);
-   digitalWrite(ledPinYellow, HIGH);
    digitalWrite(motorCtrlPort, HIGH);
    delay(1000);
    readingMoisture();
    delay(1000);
    digitalWrite(motorCtrlPort, LOW);
-   digitalWrite(ledPinGreen, LOW);
-   digitalWrite(ledPinRed,LOW);
-   digitalWrite(ledPinYellow,LOW);
    digitalWrite(sensorCtrlPort,LOW);
-   Serial.println("Checked");
+   Serial.println("Checked with value ");
+   Serial.println(moistureValue);
    stdDisplPrint("Checked", true);
    if(moistureValue < 0)
-      return 0;
-   return 1;
+      return false;
+   return true;
 }
 
 void readingMoisture(){
@@ -125,11 +125,6 @@ void readingMoisture(){
    Serial.println("%");
 }
 
-void signalStatus(int ledPin){
-   digitalWrite(ledPin, HIGH);
-   delay(blinkingTime);
-   digitalWrite(ledPin, LOW);
-}
 
 void watering(){
    digitalWrite(motorCtrlPort, HIGH);
@@ -144,15 +139,12 @@ void setup() {
    display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
    stdDisplPrint("Hello, starting...", true);
    moistureValue=0;
-   pinMode(ledPinGreen, OUTPUT);
-   pinMode(ledPinYellow, OUTPUT);
-   pinMode(ledPinRed, OUTPUT);
    pinMode(sensorCtrlPort, OUTPUT);
    pinMode(motorCtrlPort, OUTPUT);
    Serial.println("Reading From the Sensor CHECK...");
    delay(2000);
    wiring = wiringCheck();
-   if(wiring == 0 ){
+   if(!wiring){
       Serial.println("Bad Wiring");
       stdDisplPrint("Bad Wiring", true);
    }
@@ -161,7 +153,7 @@ void setup() {
 
 void loop() {
    if(wiring){
-      serial.println("readfromLoop");
+      Serial.println("readfromLoop");
       readingMoisture();
       if((moistureValue < 30)){
          //signalStatus(ledPinRed);
@@ -175,9 +167,9 @@ void loop() {
          plantStatus=GOOD;
       }
       mainDispView();
-      serial.println("timer");
-      delay(timeBtwReadings); //aspetta 
-      serial.println("endtimer");
+      Serial.println("timer");
+      delay(43200000); //aspetta 
+      Serial.println("endtimer");
    }else{
       Serial.println("Wrong wiring or sensor disabled");
    }
