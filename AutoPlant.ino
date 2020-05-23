@@ -37,7 +37,7 @@ int moistureValue = 0; //value of water percentage into the ground
 int watered = 0;
 boolean wiring = false;
 //interface
-int remainingTimeHrs = timeBtwReadings/3600000;
+int remainingTimeHrs = 12;
 int plantStatus = -1;
 
 
