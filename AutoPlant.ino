@@ -1,19 +1,21 @@
-//Plant-o-matic By TheTimeVoyager
+//Plant-o-matic, TOPSOILER By TheTimeVoyager
 //GPL v3.0 licensed
 //version 0.2
-//checks terrain everi 12 hours and after delivers 10 seconds of water, startup wiring check
+//checks terrain every CHECKINGHOURS hours and after delivers 10 seconds of water, startup with wiring check, 
 
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#define DEBUG
 #define PROGVERSION 0.2
 #define GOOD 0
 #define NORMAL 1
 #define BAD 2
 #define OLED_RESET 4
 #define CHECKINGHOURS 4 //number of hours between checks
+#define ONEHOUR 3600000 //placeholder for one hour in millisecond  //12h LEGENDA: 1h = 3 600 000 milliseconds
 Adafruit_SSD1306 display(OLED_RESET);
 // #if (SSD1306_LCDHEIGHT != 32)
 // #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -22,18 +24,14 @@ Adafruit_SSD1306 display(OLED_RESET);
 //input
 int sensorPin = A0;
 //output
-int ledPinGreen = 4;
-int ledPinYellow = 5;
-int ledPinRed = 6;
 
 //control
 int sensorCtrlPort =2;
 int motorCtrlPort = 7;
 //parameters
-int timeBtwReadings = 43200000; //12h LEGENDA: 1h = 3 600 000 milliseconds
-int blinkingTime = 300000; //5min
 int wateringTime = 10000; //10seconds
 int moistureValue = 0; //value of water percentage into the ground
+int moistureOld[2] = {-1,-1}; //old values
 //service
 int watered = 0;
 boolean wiring = false;
@@ -70,7 +68,10 @@ void mainDispView(){
    display.println("Moisture:");
    display.setCursor(60,15);
    display.println(moistureValue);
-   
+   display.setCursor(85,15);
+   display.println(moistureOld[0]);
+   display.setCursor(110,15);
+   display.println(moistureOld[1]);
    // display.setCursor(6,1);
    // display.println("WaterTime (sec):");
    // display.setCursor(6,20);
@@ -92,7 +93,9 @@ void mainDispView(){
    display.setCursor(110,25);
    display.println(remainingTimeHrs);
    
-   Serial.println("displaying");
+   #ifdef DEBUG
+   Serial.println("displaying MainView");
+   #endif
    display.display();
 }
 
@@ -107,9 +110,11 @@ boolean wiringCheck(){
    delay(1000);
    digitalWrite(motorCtrlPort, LOW);
    digitalWrite(sensorCtrlPort,LOW);
+   stdDisplPrint("Checked", true);
+   #ifdef DEBUG
    Serial.println("Checked with value ");
    Serial.println(moistureValue);
-   stdDisplPrint("Checked", true);
+   #endif
    if(moistureValue < 0)
       return false;
    return true;
@@ -117,15 +122,24 @@ boolean wiringCheck(){
 
 void readingMoisture(){
    stdDisplPrint("Reading Moisture...", true);
+   moistureOld[1] = moistureOld[0];
+   moistureOld[0] = moistureValue;
    digitalWrite(sensorCtrlPort, HIGH);
    delay(10000); //necessary to let sensor have enough time to initialize.
    moistureValue= analogRead(sensorPin);
    digitalWrite(sensorCtrlPort, LOW);
    moistureValue = map(moistureValue,550,0,0,100);
-   moistureValue = moistureValue +22; //strange offset?!
+   //moistureValue = moistureValue +22; //strange offset?!
+
+   #ifdef DEBUG
    Serial.print("Moisture : ");
    Serial.print(moistureValue);
-   Serial.println("%");
+   Serial.print(" ");
+   Serial.print(moistureOld[0]);
+   Serial.print(" ");
+   Serial.print(moistureOld[1]);
+   Serial.println(" %");
+   #endif
 }
 
 void watering(){
@@ -142,7 +156,8 @@ void timer(int hours){
    // Serial.println("hrs");
    remainingTimeHrs = hours;
    while(remainingTimeHrs!=0){
-      delay(360000); //1h
+      delay(ONEHOUR); //1h 
+      //delay(15000); //15sec 
       remainingTimeHrs--;
       mainDispView();
    } 
@@ -174,11 +189,9 @@ void loop() {
       Serial.println("readfromLoop");
       readingMoisture();
       if((moistureValue < 30)){
-         //signalStatus(ledPinRed);
          plantStatus=BAD;
          watering();
       }else if((moistureValue >= 30) && (moistureValue<80)){
-         //signalStatus(ledPinYellow);
          plantStatus=NORMAL;
          watering();
       }else if(moistureValue >= 80){
