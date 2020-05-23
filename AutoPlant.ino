@@ -37,9 +37,11 @@ int moistureValue = 0; //value of water percentage into the ground
 int watered = 0;
 boolean wiring = false;
 //interface
-int checkingHour = timeBtwReadings / 360000;
+int remainingTimeHrs = timeBtwReadings/3600000;
 int plantStatus = -1;
 
+
+/*---UTILITY FUNCTIONS---*/
 void stdDisplPrint(String s, boolean res){
    if (res)
       display.clearDisplay();
@@ -57,7 +59,7 @@ void mainDispView(){
    display.setTextSize(1);
    //line1
    display.setCursor(0,1); //(x,y)
-   display.println("Plant-O-Matic");
+   display.println("TOPSOILER");
    display.setCursor(93,1);
    display.println("V");
    display.setCursor(100,1);
@@ -87,7 +89,7 @@ void mainDispView(){
    display.setCursor(80,25);
    display.println("Freq:");
    display.setCursor(110,25);
-   display.println(checkingHour);
+   display.println(remainingTimeHrs);
    
    Serial.println("displaying");
    display.display();
@@ -125,13 +127,27 @@ void readingMoisture(){
    Serial.println("%");
 }
 
-
 void watering(){
+   stdDisplPrint("Watering...", true);
    digitalWrite(motorCtrlPort, HIGH);
    delay(wateringTime);
    digitalWrite(motorCtrlPort, LOW);
    watered++;
 }
+
+void timer(){
+   Serial.println("timer");
+   Serial.println(remainingTimeHrs);
+   Serial.println("hrs");
+   while(remainingTimeHrs!=0){
+      delay(360000); //1h
+      remainingTimeHrs--;
+      mainDispView();
+   } 
+   Serial.println("endtimer");
+}
+
+/*---SETUP AND LOOP---*/
 
 void setup() {
    
@@ -167,9 +183,8 @@ void loop() {
          plantStatus=GOOD;
       }
       mainDispView();
-      Serial.println("timer");
-      delay(43200000); //aspetta 
-      Serial.println("endtimer");
+      timer();
+      
    }else{
       Serial.println("Wrong wiring or sensor disabled");
    }
