@@ -13,6 +13,7 @@
 #define NORMAL 1
 #define BAD 2
 #define OLED_RESET 4
+#define CHECKINGHOURS 4 //number of hours between checks
 Adafruit_SSD1306 display(OLED_RESET);
 // #if (SSD1306_LCDHEIGHT != 32)
 // #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -37,7 +38,7 @@ int moistureValue = 0; //value of water percentage into the ground
 int watered = 0;
 boolean wiring = false;
 //interface
-int remainingTimeHrs = 12;
+int remainingTimeHrs = CHECKINGHOURS;
 int plantStatus = -1;
 
 
@@ -135,10 +136,11 @@ void watering(){
    watered++;
 }
 
-void timer(){
-   Serial.println("timer");
-   Serial.println(remainingTimeHrs);
-   Serial.println("hrs");
+void timer(int hours){
+   // Serial.println("timer");
+   // Serial.println(remainingTimeHrs);
+   // Serial.println("hrs");
+   remainingTimeHrs = hours;
    while(remainingTimeHrs!=0){
       delay(360000); //1h
       remainingTimeHrs--;
@@ -178,12 +180,13 @@ void loop() {
       }else if((moistureValue >= 30) && (moistureValue<80)){
          //signalStatus(ledPinYellow);
          plantStatus=NORMAL;
+         watering();
       }else if(moistureValue >= 80){
          //signalStatus(ledPinGreen);
          plantStatus=GOOD;
       }
       mainDispView();
-      timer();
+      timer(CHECKINGHOURS);
       
    }else{
       Serial.println("Wrong wiring or sensor disabled");
