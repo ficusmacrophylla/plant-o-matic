@@ -14,7 +14,9 @@
 #define NORMAL 1
 #define BAD 2
 #define OLED_RESET 4
-#define CHECKINGHOURS 4 //number of hours between checks
+#define CHECKINGHOURS 8 //number of hours of a moisture check
+#define LIGHTHOURS 8 //length in hours of a light on/off cycle
+#define WATERINGHOURS 24 //number of hours of a watering cycle
 #define ONEHOUR 3600000 //placeholder for one hour in millisecond  //12h LEGENDA: 1h = 3 600 000 milliseconds
 Adafruit_SSD1306 display(OLED_RESET);
 // #if (SSD1306_LCDHEIGHT != 32)
@@ -28,19 +30,22 @@ int sensorPin = A0;
 //control
 int sensorCtrlPort =2;
 int motorCtrlPort = 7;
+int lightCtrlPort = 9;
 //parameters
-int wateringTime = 10000; //10seconds
+int wateringTime = 5000; //5 seconds
 int moistureValue = 0; //value of water percentage into the ground
 int moistureOld[2] = {-1,-1}; //old values
 //service
 int watered = 0;
 boolean wiring = false;
+boolean lastLightStatus = false;
 //interface
-int remainingTimeHrs = CHECKINGHOURS;
 int plantStatus = -1;
+int dayhours = 0;
 
 
 /*---UTILITY FUNCTIONS---*/
+
 void stdDisplPrint(String s, boolean res){
    if (res)
       display.clearDisplay();
@@ -66,11 +71,11 @@ void mainDispView(){
    //line2
    display.setCursor(0,15);
    display.println("Moisture:");
-   display.setCursor(60,15);
+   display.setCursor(55,15);
    display.println(moistureValue);
-   display.setCursor(85,15);
+   display.setCursor(80,15);
    display.println(moistureOld[0]);
-   display.setCursor(110,15);
+   display.setCursor(105,15);
    display.println(moistureOld[1]);
    // display.setCursor(6,1);
    // display.println("WaterTime (sec):");
@@ -88,10 +93,10 @@ void mainDispView(){
       display.println(":(");
    else display.println("ND");
 
-   display.setCursor(80,25);
-   display.println("Freq:");
+   display.setCursor(75,25);
+   display.println("Cycle:");
    display.setCursor(110,25);
-   display.println(remainingTimeHrs);
+   display.println(dayhours);
    
    #ifdef DEBUG
    Serial.println("displaying MainView");
@@ -99,18 +104,38 @@ void mainDispView(){
    display.display();
 }
 
+void logonScreen(String s){
+   //line1
+   display.clearDisplay();
+   display.setTextColor(WHITE);
+   display.setTextSize(1);
+   display.setCursor(10,1); //(x,y)
+   display.println("TOPSOILER");
+   display.setCursor(103,1);
+   display.println("V");
+   display.setCursor(110,1);
+   display.println(PROGVERSION);
+   //line2
+   display.setCursor(20,15);
+   display.println(s);
+   display.display();
+}
+
 boolean wiringCheck(){
    Serial.println("Checking Wiring");
-   stdDisplPrint("Checking Wiring", true);
+   logonScreen("Checking Wiring");
    //powering
    digitalWrite(sensorCtrlPort, HIGH);
    digitalWrite(motorCtrlPort, HIGH);
-   delay(1000);
-   readingMoisture();
+   digitalWrite(lightCtrlPort, HIGH);
    delay(1000);
    digitalWrite(motorCtrlPort, LOW);
+   readingMoisture();
+   delay(1000);
+   digitalWrite(lightCtrlPort,LOW);
    digitalWrite(sensorCtrlPort,LOW);
-   stdDisplPrint("Checked", true);
+   logonScreen("Checked");
+   delay(1000);
    #ifdef DEBUG
    Serial.println("Checked with value ");
    Serial.println(moistureValue);
@@ -118,6 +143,18 @@ boolean wiringCheck(){
    if(moistureValue < 0)
       return false;
    return true;
+}
+
+void checkMoisture(){ //updates status AND emergency watering
+   readingMoisture();
+   if((moistureValue <= 5)){
+      plantStatus=BAD;
+      watering();
+   }else if((moistureValue > 5) && (moistureValue<80)){
+      plantStatus=NORMAL;
+   }else if(moistureValue >= 80){
+      plantStatus=GOOD;
+   }
 }
 
 void readingMoisture(){
@@ -142,6 +179,14 @@ void readingMoisture(){
    #endif
 }
 
+void lightController(boolean status){
+   if(status)
+      digitalWrite(lightCtrlPort, HIGH);
+   else
+      digitalWrite(lightCtrlPort, LOW);
+   lastLightStatus = status;
+}
+
 void watering(){
    stdDisplPrint("Watering...", true);
    digitalWrite(motorCtrlPort, HIGH);
@@ -150,18 +195,26 @@ void watering(){
    watered++;
 }
 
-void timer(int hours){
-   // Serial.println("timer");
-   // Serial.println(remainingTimeHrs);
-   // Serial.println("hrs");
-   remainingTimeHrs = hours;
-   while(remainingTimeHrs!=0){
-      delay(ONEHOUR); //1h 
-      //delay(15000); //15sec 
-      remainingTimeHrs--;
+void scheduler(){
+   dayhours = 0; 
+   while(dayhours < 24){
+      if((dayhours % CHECKINGHOURS) == 0){
+         checkMoisture();
+      }
+      if((dayhours % LIGHTHOURS) == 0){
+         if(lastLightStatus)
+            lightController(false);
+         else
+            lightController(true);
+      }
+      if((dayhours % WATERINGHOURS) == 0){
+            watering();
+      }
       mainDispView();
-   } 
-   Serial.println("endtimer");
+      delay(ONEHOUR);
+      dayhours++;
+
+   }
 }
 
 /*---SETUP AND LOOP---*/
@@ -170,40 +223,25 @@ void setup() {
    
    Serial.begin(9600);
    display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-   stdDisplPrint("Hello, starting...", true);
-   moistureValue=0;
+   logonScreen("Starting...");
    pinMode(sensorCtrlPort, OUTPUT);
    pinMode(motorCtrlPort, OUTPUT);
+   pinMode(lightCtrlPort, OUTPUT);
+   #ifdef DEBUG
    Serial.println("Reading From the Sensor CHECK...");
+   #endif
    delay(2000);
    wiring = wiringCheck();
    if(!wiring){
-      Serial.println("Bad Wiring");
-      stdDisplPrint("Bad Wiring", true);
+      //Serial.println("Bad Wiring");
+      logonScreen("Bad Wiring");
    }
 
    }
 
 void loop() {
-   if(wiring){
-      Serial.println("readfromLoop");
-      readingMoisture();
-      if((moistureValue < 30)){
-         plantStatus=BAD;
-         watering();
-      }else if((moistureValue >= 30) && (moistureValue<80)){
-         plantStatus=NORMAL;
-         watering();
-      }else if(moistureValue >= 80){
-         //signalStatus(ledPinGreen);
-         plantStatus=GOOD;
-      }
-      mainDispView();
-      timer(CHECKINGHOURS);
-      
-   }else{
-      Serial.println("Wrong wiring or sensor disabled");
-   }
-    
+   if(wiring)
+      scheduler();
+   else logonScreen("Bad Wiring");
 
 }
