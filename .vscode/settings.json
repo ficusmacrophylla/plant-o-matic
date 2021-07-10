@@ -1,0 +1,13 @@
+{
+    "C_Cpp.default.includePath": [
+        "C:/Program Files (x86)/Arduino/libraries/**",
+        "C:/Program Files (x86)/Arduino/hardware/arduino/avr/cores/arduino/**",
+        "C:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include/**",
+        "C:/Program Files (x86)/Arduino/hardware/tools/avr/lib/gcc/avr/5.4.0/include/**",
+        "C:/Program Files (x86)/Arduino/hardware/arduino/avr/variants/standard/**",
+        "C:/Users/Maverick/.platformio/packages/framework-arduinoavr/**",
+        "C:/Users/Maverick/Documents/Arduino/libraries/**",
+        "{$workspaceFolder}/libraries/**",
+        "{$workspaceFolder}/**"
+    ]
+}
