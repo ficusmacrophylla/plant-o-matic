@@ -1,6 +1,12 @@
 # Plant-O-Matic
 Arduino UNO based hydroponic project for a self-sufficient plant.
 
+# ACTUAL SITUATION 
+Actually Flashing this firmware on an arduino nano board connected to a pump and a ground sensor provides a self sufficient plant with a control display and also offers the possibility to connect a 5V led stripe that could be powered on a specific light-cycle.  
+
+# WORKING ON
+Implementing a circular menu button to manage irrigation settings. 
+
 # ROADMAP
 V0.1) Automatic Water signaling
   When water level into the ground goes down, led blinks. Measures every hour, hardware enabling circuit to preserve it. 
