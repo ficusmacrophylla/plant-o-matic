@@ -1,33 +1,120 @@
-# Plant-O-Matic
-Arduino UNO based hydroponic project for a self-sufficient plant.
+# 🌿 Plant-O-Matic (TOPSOILER)
 
-# ACTUAL SITUATION 
-Actually Flashing this firmware on an arduino nano board connected to a pump and a ground sensor provides a self sufficient plant with a control display and also offers the possibility to connect a 5V led stripe that could be powered on a specific light-cycle.  
+An **Arduino-based autonomous irrigation and lighting system** designed to maintain ideal soil conditions for your plants through periodic moisture monitoring, pump control, and light cycles. Version 0.2 of the firmware incorporates power-saving sensor management, OLED status display, and safety wiring checks.
 
-# WORKING ON
-Implementing a circular menu button to manage irrigation settings. 
+---
 
-# ROADMAP
-V0.1) Automatic Water signaling
-  When water level into the ground goes down, led blinks. Measures every hour, hardware enabling circuit to preserve it. 
-V1) Automatic water filling
-  When ground sensor indicates a low humidity (2 measures in a day to preserve sensor) on terrain, pump starts. Activity Led, serial Logging.
-V1.1) Empty Tank Failsafe
-  Adding hardware-based failsafe circuit to disable water pump if water reaches a too low level. Activity Led starts to blink.
-V1.2) Display
-  Adding display to show plant status
-V1.3) UV Lamp
-V1.4) WIFI Serial Communication, web status check.
-V1.5) Other Base Features TODO
-V2) App control plant / Telegram Bot
+## 📖 Overview
 
-# Materials (easy to find on ebay):
+Plant-O-Matic automates plant watering by sensing soil moisture and activates a pump only when needed. It also manages a grow light cycle and outputs real-time status on an OLED display, making it a self-sufficient smart plant system.
 
-- Arduino UNO/Nano ATMEGA Microcontroller 
-- MicroPump 5V
-- Cables and breadboard
-- Transistor (wip)
-- 3x Leds (Red, green, yellow)
-- empty tank sensor
-- Ground sensor 
-- OLED string Display
+---
+
+## 🧠 Core Firmware Features
+
+- **Automated Soil Moisture Sensing:** Checks moisture every 8 hours, maps readings to 0-100% scale.
+- **Pump Control:** Waters plants for a configurable duration when moisture falls below threshold.
+- **Grow Light Cycling:** Toggles light on/off every 8 hours to simulate natural lighting conditions.
+- **OLED Status Display:** Shows version, moisture values (current + previous two readings), plant status emoji, and cycle time.
+- **Wiring Check:** Validates sensor, pump, and light wiring on startup with user feedback.
+- **Power Saving:** Sensor power controlled strategically, reducing wear and preserving accuracy.
+- **Serial Debugging:** Logs data and system states when in DEBUG mode.
+
+---
+
+## 🔌 Hardware Setup
+
+| Component           | Connected To          |
+|---------------------|-----------------------|
+| Soil Moisture Sensor | Analog Pin A0         |
+| Sensor Power        | Digital Pin 2           |
+| Pump (via transistor) | Digital Pin 7           |
+| Grow Light (LED strip) | Digital Pin 9           |
+| OLED Display (I2C)   | SDA: A4, SCL: A5       |
+| Serial Monitor       | 9600 baud rate          |
+
+---
+
+## ⚙️ Deploying Firmware
+
+1. Clone the repo and open `AutoPlant.ino` in Arduino IDE.
+2. Select Arduino Nano or UNO board and set the correct COM port.
+3. Upload the firmware.
+4. Open serial monitor at 9600 baud to read logs.
+5. The system will run automatically checking moisture, cycling water and light, and updating the display.
+
+---
+
+## 🧭 Firmware Workflow
+
+flowchart TD
+A[System Startup] --> B[Wiring Check]
+B -->|OK| C[Main Scheduler Loop]
+B -->|Fail| Z[Error Display / Halt]
+C --> D[Read Moisture (every 8h)]
+D --> E{Moisture < Threshold?}
+E -->|Yes| F[Activate Pump (5s)]
+E -->|No| G[Skip Watering]
+F --> H[Update Display + Serial Log]
+G --> H
+H --> I[Light Cycle Check (every 8h)]
+I --> J{Light ON Period?}
+J -->|Yes| K[Turn Light ON]
+J -->|No| L[Turn Light OFF]
+K --> M[Display Status + Emoji (:))]
+L --> M
+M --> N[Watering Cycle (every 24h)]
+N --> D
+
+
+---
+
+## 🗺️ Roadmap
+
+- **v0.2 (Current):**  
+  - Automated moisture reading and pump activation  
+  - OLED display integration  
+  - Wiring validation and sensor power management  
+
+- **v0.3:**  
+  - Circular button menu for manual irrigation control and configuration  
+  - Add empty-tank sensor with hardware failsafe to prevent dry-run pump damage  
+
+- **v0.4:**  
+  - Wi-Fi module integration for web-based status dashboard and remote control  
+  - Data logging and alert notifications  
+
+- **v0.5:**  
+  - Advanced lighting management, including UV support and multi-stage light cycles  
+  - Integration with home automation platforms  
+
+- **v1.0:**  
+  - Full mobile app and Telegram bot integration for real-time monitoring and control  
+  - Expanded sensor suite: temperature, pH, nutrient levels  
+
+- **Beyond v1.0:**  
+  - Modular sensor/actuator expansion  
+  - AI-based irrigation optimization algorithms  
+  - Cloud connectivity and data analytics  
+
+---
+
+## 🧰 Required Materials
+
+- Arduino Nano or UNO (ATmega328P)  
+- 5V Micro Pump  
+- Soil Moisture Sensor (Analog)  
+- Transistor or Relay Module for Pump Control  
+- 5V LED Strip (Grow Light)  
+- OLED Display (SSD1306, 128×32, I²C)  
+- Assorted wires, breadboard, power supply  
+
+---
+
+## 🧾 License
+
+This project is released under the **GNU GPL v3.0** license — free to use, modify, and share with attribution.
+
+---
+
+🌱 *Happy gardening with intelligent automation!*
