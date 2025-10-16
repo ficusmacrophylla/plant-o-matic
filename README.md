@@ -45,30 +45,6 @@ Plant-O-Matic automates plant watering by sensing soil moisture and activates a 
 
 ---
 
-## 🧭 Firmware Workflow
-
-flowchart TD
-A[System Startup] --> B[Wiring Check]
-B -->|OK| C[Main Scheduler Loop]
-B -->|Fail| Z[Error Display / Halt]
-C --> D[Read Moisture (every 8h)]
-D --> E{Moisture < Threshold?}
-E -->|Yes| F[Activate Pump (5s)]
-E -->|No| G[Skip Watering]
-F --> H[Update Display + Serial Log]
-G --> H
-H --> I[Light Cycle Check (every 8h)]
-I --> J{Light ON Period?}
-J -->|Yes| K[Turn Light ON]
-J -->|No| L[Turn Light OFF]
-K --> M[Display Status + Emoji (:))]
-L --> M
-M --> N[Watering Cycle (every 24h)]
-N --> D
-
-
----
-
 ## 🗺️ Roadmap
 
 - **v0.2 (Current):**  
